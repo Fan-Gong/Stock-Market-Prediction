@@ -1,0 +1,79 @@
+---
+title: "Phase one"
+author: "Fan Gong"
+date: "June 24, 2017"
+output:
+  github_document: default
+---
+
+#Preparation
+
+Set work directory and install packages
+```{r, warning=FALSE, message=FALSE}
+library(lubridate)
+library(ggplot2)
+library(changepoint)
+library(tsoutliers)
+load("/Users/gongfan/Desktop/byteflow/Stock Market/complete_dataset.RData")
+```
+
+#First cycle
+```{r,warning=FALSE}
+#tail(rownames(df[df$date=="2014-12-30",]),1)
+first_cycle <- df[1:108546,]
+first_cycle$recv.time<- as.POSIXct(strptime(paste(first_cycle$date,first_cycle$recv.time),"%Y-%m-%d %H:%M:%S"))
+ggplot(data = first_cycle, aes(x = recv.time,y = px)) + geom_line() 
+```
+
+##method 1 
+
+I use the number of change points to represent the trend difference. 
+```{r,warning=FALSE}
+mvalue_first <- cpt.mean(first_cycle$px, method="PELT")
+changepoint_first <- first_cycle[cpts(mvalue_first),]
+head(changepoint_first)
+plot(px~recv.time, data = first_cycle)
+points(x=changepoint_first$recv.time, y=changepoint_first$px, col='red')
+plot(mvalue_first)
+```
+
+*The result shows that during the signal day, it always has more change points.*
+
+##method 2
+
+I use the significance of dummy variable to show that there must be some trend differences between normal days and signal days.
+
+###method 2 model
+```{r,warning=FALSE}
+first_cycle$sig <- "no"
+first_cycle[first_cycle$date == "2014-12-19","sig"] <- "yes"
+first_cycle$sig <- as.factor(first_cycle$sig)
+lm1 <- lm(px~recv.time + sig, data = first_cycle) 
+summary(lm1)
+lm_without_dummy <- lm(px~recv.time, data = first_cycle)
+
+plot(px~recv.time, data = first_cycle)
+abline(lm1, col = "red")
+abline(lm_without_dummy, col = "green")
+legend("topright", legend = c('with dummy variable', 'without dummy variable'), col = c('red','green'), lty = 1)
+```
+
+###method 2 robust test 
+
+suppose we randomly choose 10000 data points as signal days' data to test now whether or not the dummy variable is significant.
+The reason I choose 10000 is because the signal day has 30000+ data.
+
+```{r,warning=FALSE}
+random_row <- base::sample(1:nrow(first_cycle), size = 10000)
+first_cycle$sig <- "no"
+first_cycle[random_row,"sig"] <- "yes"
+first_cycle$sig <- as.factor(first_cycle$sig)
+lm_robust <- lm(px~recv.time +sig, data = first_cycle)
+summary(lm_robust)
+```
+
+*the output obviously shows that now the dummy variable is not statistical significant*
+
+
+
+
