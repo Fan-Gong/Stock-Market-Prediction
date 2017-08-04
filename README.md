@@ -1,7 +1,7 @@
 # Stock-Market-Prediction
-### Project Overview###
+### Project Overview
 
-We are analyzing daily stock market data to determine if there is a significant difference between signal dates (day after an earnings report) and other dates. Read the guidelines below carefully before you start contributing.
+We are analyzing daily stock market data to determine if there is a significant difference between signal dates (day after an earnings report) and other dates. 
 
 1) First phase is to determine if there is any trend on signal dates that doesn't appear on other dates. Are oscillation patterns on signal dates special? For this phase, we can focus on one ticker.
 
